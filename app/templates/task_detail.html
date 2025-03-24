@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Детали задачи #{{ task.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Задача #{{ task.id }}</h1>
+    <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Информация о задаче</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Статус:</h6>
+                    {% if task.status == 'pending' %}
+                    <span class="badge bg-secondary">Ожидает</span>
+                    {% elif task.status == 'processing' %}
+                    <span class="badge bg-info">В процессе</span>
+                    {% elif task.status == 'completed' %}
+                    <span class="badge bg-success">Завершено</span>
+                    {% elif task.status == 'failed' %}
+                    <span class="badge bg-danger">Ошибка</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Временные метки:</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Создана
+                            <span>{{ task.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</span>
+                        </li>
+                        {% if task.started_at %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Начало обработки
+                            <span>{{ task.started_at.strftime('%d.%m.%Y %H:%M:%S') }}</span>
+                        </li>
+                        {% endif %}
+                        {% if task.completed_at %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Завершена
+                            <span>{{ task.completed_at.strftime('%d.%m.%Y %H:%M:%S') }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Связанные данные:</h6>
+                    <ul class="list-group">
+                        {% if task.collection %}
+                        <li class="list-group-item">
+                            <strong>Коллекция:</strong> 
+                            <a href="{{ url_for('main.collections', type=task.collection.type) }}">
+                                {{ task.collection.title }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if task.project %}
+                        <li class="list-group-item">
+                            <strong>Проект:</strong> 
+                            <a href="{{ url_for('main.projects') }}">
+                                {{ task.project.title }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Параметры генерации:</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Размер
+                            <span>{{ task.width }}x{{ task.height }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Шаги
+                            <span>{{ task.steps }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Сэмплер
+                            <span>{{ task.sampler_name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            CFG Scale
+                            <span>{{ task.cfg_scale }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        {% if task.error %}
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Ошибка</h5>
+            </div>
+            <div class="card-body">
+                <pre class="text-danger">{{ task.error }}</pre>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Промпт</h5>
+            </div>
+            <div class="card-body">
+                <pre>{{ task.prompt }}</pre>
+            </div>
+        </div>
+        
+        {% if task.status == 'completed' and task.result_path %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Результат</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ task.result_url }}" alt="Generated image" class="img-fluid mb-3 rounded">
+                <div>
+                    <a href="{{ task.result_url }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-arrows-fullscreen"></i> Открыть в полном размере
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

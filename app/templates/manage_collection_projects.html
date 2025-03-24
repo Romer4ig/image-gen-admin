@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Управление проектами для коллекции{{ collection.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1>Управление проектами для коллекции "{{ collection.title }}"</h1>
+</div>
+
+<div class="mb-3">
+    <div class="d-flex align-items-center">
+        <span class="me-2">Легенда статусов:</span>
+        <span class="badge bg-primary me-2">Без генерации</span>
+        <span class="badge bg-warning me-2">В процессе</span>
+        <span class="badge bg-success me-2">Сгенерировано</span>
+        <span class="badge bg-danger me-2">Ошибка</span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Выберите проекты для коллекции</label>
+                        <div class="list-group">
+                            {% for project in projects %}
+                            {% set key = collection.id ~ '-' ~ project.id %}
+                            {% set status = generation_status.get(key) %}
+                            <label class="list-group-item d-flex gap-2">
+                                <div>
+                                    <input class="form-check-input" type="checkbox" name="projects" value="{{ project.id }}" 
+                                    {% if project in collection.projects %}checked{% endif %}>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>{{ project.title }}</strong>
+                                        {% if status == 'completed' %}
+                                        <span class="badge bg-success">Сгенерировано</span>
+                                        {% elif status == 'pending' %}
+                                        <span class="badge bg-warning">В процессе</span>
+                                        {% elif status == 'failed' %}
+                                        <span class="badge bg-danger">Ошибка</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if project.basic_prompt %}
+                                    <button type="button" class="btn btn-sm btn-outline-info mt-1" data-bs-toggle="collapse" 
+                                            data-bs-target="#prompt-{{ project.id }}">
+                                        <i class="bi bi-eye"></i> Показать промпт
+                                    </button>
+                                    <div class="collapse mt-2" id="prompt-{{ project.id }}">
+                                        <div class="card card-body bg-light">
+                                            <small class="text-muted">Базовый промпт:</small>
+                                            <p class="mb-0">{{ project.basic_prompt }}</p>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <small class="text-muted">(Нет базового промпта)</small>
+                                    {% endif %}
+                                    
+                                    {% if status == 'completed' %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('main.tasks', status='completed') }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-image"></i> Просмотреть результат
+                                        </a>
+                                    </div>
+                                    {% elif not status %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('main.generate_image', collection_id=collection.id, project_id=project.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           onclick="event.preventDefault(); document.getElementById('generate-form-{{ project.id }}').submit();">
+                                            <i class="bi bi-play"></i> Запустить генерацию
+                                        </a>
+                                        <form id="generate-form-{{ project.id }}" 
+                                              action="{{ url_for('main.generate_image', collection_id=collection.id, project_id=project.id) }}" 
+                                              method="post" style="display: none;"></form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.collections') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад к коллекциям
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

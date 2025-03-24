@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Задачи генерации{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Задачи генерации</h1>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Фильтры</h5>
+        
+        <div class="row g-3">
+            <div class="col-md-12">
+                <div class="btn-group mb-3" role="group">
+                    <a href="{{ url_for('main.tasks', collection_id=collection_id, project_id=project_id) }}" class="btn btn-outline-primary {% if not status_filter %}active{% endif %}">
+                        Все задачи
+                    </a>
+                    <a href="{{ url_for('main.tasks', status='pending', collection_id=collection_id, project_id=project_id) }}" class="btn btn-outline-secondary {% if status_filter == 'pending' %}active{% endif %}">
+                        Ожидающие
+                    </a>
+                    <a href="{{ url_for('main.tasks', status='processing', collection_id=collection_id, project_id=project_id) }}" class="btn btn-outline-info {% if status_filter == 'processing' %}active{% endif %}">
+                        В процессе
+                    </a>
+                    <a href="{{ url_for('main.tasks', status='completed', collection_id=collection_id, project_id=project_id) }}" class="btn btn-outline-success {% if status_filter == 'completed' %}active{% endif %}">
+                        Завершенные
+                    </a>
+                    <a href="{{ url_for('main.tasks', status='failed', collection_id=collection_id, project_id=project_id) }}" class="btn btn-outline-danger {% if status_filter == 'failed' %}active{% endif %}">
+                        С ошибкой
+                    </a>
+                </div>
+            </div>
+            
+            <form class="row g-3" method="get" action="{{ url_for('main.tasks') }}">
+                {% if status_filter %}
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                {% endif %}
+                
+                <div class="col-md-5">
+                    <label for="collection_id" class="form-label">Коллекция</label>
+                    <select id="collection_id" name="collection_id" class="form-select">
+                        <option value="">Все коллекции</option>
+                        {% for col in collections %}
+                        <option value="{{ col.id }}" {% if collection_id|string == col.id|string %}selected{% endif %}>
+                            {{ col.title }} ({{ col.type }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-5">
+                    <label for="project_id" class="form-label">Проект</label>
+                    <select id="project_id" name="project_id" class="form-select">
+                        <option value="">Все проекты</option>
+                        {% for proj in projects %}
+                        <option value="{{ proj.id }}" {% if project_id|string == proj.id|string %}selected{% endif %}>
+                            {{ proj.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Применить</button>
+                    {% if collection_id or project_id %}
+                    <a href="{{ url_for('main.tasks', status=status_filter) }}" class="btn btn-outline-secondary">Сбросить</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if tasks %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th scope="col" style="width: 5%">ID</th>
+                <th scope="col" style="width: 20%">Коллекция/Проект</th>
+                <th scope="col" style="width: 30%">Промпт</th>
+                <th scope="col" style="width: 15%">Статус</th>
+                <th scope="col" style="width: 15%">Дата создания</th>
+                <th scope="col" style="width: 15%">Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>
+                    {% if task.collection %}
+                    <div>
+                        <strong>Коллекция:</strong> 
+                        <a href="{{ url_for('main.tasks', collection_id=task.collection.id, status=status_filter) }}">
+                            {{ task.collection.title }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if task.project %}
+                    <div>
+                        <strong>Проект:</strong> 
+                        <a href="{{ url_for('main.tasks', project_id=task.project.id, status=status_filter) }}">
+                            {{ task.project.title }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="text-truncate" style="max-width: 300px;" title="{{ task.prompt }}">
+                        {{ task.prompt }}
+                    </div>
+                </td>
+                <td>
+                    {% if task.status == 'pending' %}
+                    <span class="badge bg-secondary">Ожидает</span>
+                    {% elif task.status == 'processing' %}
+                    <span class="badge bg-info">В процессе</span>
+                    {% elif task.status == 'completed' %}
+                    <span class="badge bg-success">Завершено</span>
+                    {% elif task.status == 'failed' %}
+                    <span class="badge bg-danger">Ошибка</span>
+                    {% endif %}
+                </td>
+                <td>{{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('main.task_detail', task_id=task.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if task.status == 'completed' and task.result_url %}
+                        <a href="{{ task.result_url }}" target="_blank" class="btn btn-outline-success">
+                            <i class="bi bi-image"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Нет доступных задач генерации{% if status_filter %} со статусом "{{ status_filter }}"{% endif %}
+    {% if collection_id %} для выбранной коллекции{% endif %}
+    {% if project_id %} для выбранного проекта{% endif %}.
+</div>
+{% endif %}
+{% endblock %} 
