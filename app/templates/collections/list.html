@@ -5,6 +5,42 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="display-5 fw-bold text-primary"><i class="bi bi-collection"></i> Коллекции</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCollectionModal">
+        <i class="bi bi-plus-lg"></i> Создать коллекцию
+    </button>
+</div>
+
+<!-- Модальное окно создания коллекции -->
+<div class="modal fade" id="createCollectionModal" tabindex="-1" aria-labelledby="createCollectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCollectionModalLabel">Создание новой коллекции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('collections.create_collection') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="collectionId" class="form-label">ID</label>
+                        <input type="number" class="form-control" id="collectionId" name="id" required min="1">
+                        <div class="form-text">Введите уникальный числовой идентификатор коллекции</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="collectionTitle" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="collectionTitle" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="collectionType" class="form-label">Тип</label>
+                        <input type="text" class="form-control" id="collectionType" name="type" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 {% if collections or total_count > 0 %}
@@ -102,10 +138,11 @@
                         <i class="bi bi-check-square"></i>
                     </th>
                     <th scope="col" style="width: 5%">ID</th>
-                    <th scope="col" style="width: 25%">Название</th>
+                    <th scope="col" style="width: 20%">Название</th>
                     <th scope="col" style="width: 10%">Тип</th>
                     <th scope="col" style="width: 15%">Проекты</th>
-                    <th scope="col" style="width: 35%">Промпт</th>
+                    <th scope="col" style="width: 22%">Промпт</th>
+                    <th scope="col" style="width: 23%">Негативный промпт</th>
                 </tr>
             </thead>
             <tbody>
@@ -173,6 +210,17 @@
                                 <div class="card-body p-2">
                                     <div class="prompt-editor" data-collection-id="{{ collection.id }}">
                                         <textarea class="form-control prompt-text" data-original-value="{{ collection.prompt }}" style="min-height: 80px; font-family: monospace; font-size: 0.9rem;">{{ collection.prompt }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="prompt-container">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-2">
+                                    <div class="negative-prompt-editor" data-collection-id="{{ collection.id }}">
+                                        <textarea class="form-control negative-prompt-text" data-original-value="{{ collection.negative_prompt }}" style="min-height: 80px; font-family: monospace; font-size: 0.9rem;">{{ collection.negative_prompt }}</textarea>
                                     </div>
                                 </div>
                             </div>

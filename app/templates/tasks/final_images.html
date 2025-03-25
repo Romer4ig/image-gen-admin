@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Финальные изображения{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Финальные изображения</h1>
+    <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к задачам
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('tasks.view_final_images') }}" class="row g-3">
+            <div class="col-md-5">
+                <label for="collection_id" class="form-label">Коллекция</label>
+                <select id="collection_id" name="collection_id" class="form-select">
+                    <option value="">Все коллекции</option>
+                    {% for col in collections %}
+                    <option value="{{ col.id }}" {% if current_collection_id|string == col.id|string %}selected{% endif %}>
+                        {{ col.title }} ({{ col.type }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-5">
+                <label for="project_id" class="form-label">Проект</label>
+                <select id="project_id" name="project_id" class="form-select">
+                    <option value="">Все проекты</option>
+                    {% for proj in projects %}
+                    <option value="{{ proj.id }}" {% if current_project_id|string == proj.id|string %}selected{% endif %}>
+                        {{ proj.title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Применить</button>
+                {% if current_collection_id or current_project_id %}
+                <a href="{{ url_for('tasks.view_final_images') }}" class="btn btn-outline-secondary">Сбросить</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if grouped_data %}
+    {% for collection_id, data in grouped_data.items() %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{{ data.collection.title }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for project_id, project_data in data.projects.items() %}
+                <div class="col">
+                    <div class="card h-100 selected-final-image">
+                        <div class="card-header">
+                            <h5 class="mb-0">{{ project_data.project.title }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="position-relative">
+                                <img src="{{ project_data.image }}" class="card-img-top"
+                                    style="object-fit: cover; height: 200px; width: 100%;" alt="Финальное изображение">
+                                <div class="img-overlay">
+                                    <div class="overlay-content">
+                                        <div class="btn-group">
+                                            <a href="{{ project_data.image }}" target="_blank" class="btn btn-sm btn-light">
+                                                <i class="bi bi-eye"></i> Просмотр
+                                            </a>
+                                            <a href="{{ project_data.image }}" download class="btn btn-sm btn-light">
+                                                <i class="bi bi-download"></i> Скачать
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection_id, project_id=project_id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-list-check"></i> Все задачи
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="alert alert-info">
+    Нет выбранных финальных изображений{% if current_collection_id %} для выбранной коллекции{% endif %}{% if current_project_id %} для выбранного проекта{% endif %}.
+</div>
+{% endif %}
+{% endblock %}

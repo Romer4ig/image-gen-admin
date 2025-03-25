@@ -7,6 +7,7 @@ class Collection(db.Model):
     title = db.Column(db.String(255), nullable=False)
     type = db.Column(db.String(50), nullable=False)
     prompt = db.Column(db.Text, nullable=True)
+    negative_prompt = db.Column(db.Text, nullable=True)
     
     def __repr__(self):
         return f'<Collection {self.id}: {self.title}>' 

@@ -32,6 +32,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'tasks.view_final_images' %}active{% endif %}" href="{{ url_for('tasks.view_final_images') }}">
+                            <i class="bi bi-stars"></i> Финальные
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint and request.endpoint.startswith('settings.') %}active{% endif %}" href="{{ url_for('settings.manage_settings') }}">
                             <i class="bi bi-gear"></i> Настройки
                         </a>

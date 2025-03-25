@@ -71,13 +71,13 @@ class ImageGenerator:
             print(f"Ошибка при получении списка моделей SD: {e}")
             return []
     
-    def generate_image(self, prompt):
+    def generate_image(self, prompt, negative_prompt=None):
         """
         Генерирует изображение на основе промпта
         
         Args:
             prompt (str): Текст промпта для генерации
-            batch_size (int, optional): Количество изображений для генерации. Если не указано, берется из настроек.
+            negative_prompt (str, optional): Негативный промпт для генерации
             
         Returns:
             dict: Результат запроса и пути к сохраненным изображениям
@@ -105,6 +105,10 @@ class ImageGenerator:
             "scheduler": scheduler,
         }
         
+        # Добавляем негативный промпт, если он указан
+        if negative_prompt:
+            payload["negative_prompt"] = negative_prompt
+        
         # Добавляем модель, если она задана
         if sd_model:
             payload["override_settings"] = {
@@ -121,7 +125,7 @@ class ImageGenerator:
             result = response.json()
             
             # Создаем директорию для сохранения изображений
-            output_dir = Path('app/static/generated')
+            output_dir = Path(os.path.join('app', 'static', 'generated'))
             output_dir.mkdir(exist_ok=True, parents=True)
             
             # Сохраняем все изображения
@@ -134,7 +138,8 @@ class ImageGenerator:
                 with open(current_path, 'wb') as f:
                     f.write(base64.b64decode(image_base64))
                 
-                image_paths.append(str(current_path))
+                # Преобразуем путь в формат с прямыми слешами для совместимости
+                image_paths.append(str(current_path).replace(os.sep, '/'))
             
             return {
                 "success": True,

@@ -23,6 +23,12 @@
                         <div class="form-text">Этот промпт будет использоваться как основа для всех коллекций в проекте.</div>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="negative_prompt" class="form-label">Негативный промпт</label>
+                        <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="5">{{ project.negative_prompt if project.negative_prompt else '' }}</textarea>
+                        <div class="form-text">Этот негативный промпт будет использоваться как основа для всех коллекций в проекте.</div>
+                    </div>
+                    
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Отмена

@@ -44,10 +44,21 @@ class TaskManager:
             if prompt:
                 prompt += ", "
             prompt += collection.prompt.strip()
+        
+        # Формируем негативный промпт из negative_prompt проекта и коллекции
+        negative_prompt = ""
+        if project.negative_prompt:
+            negative_prompt += project.negative_prompt.strip()
+        
+        if collection.negative_prompt:
+            if negative_prompt:
+                negative_prompt += ", "
+            negative_prompt += collection.negative_prompt.strip()
             
         # Создаем новую задачу
         task = GenerationTask(
             prompt=prompt,
+            negative_prompt=negative_prompt,
             collection_id=collection_id,
             project_id=project_id,
             status='pending'
@@ -105,7 +116,10 @@ class TaskManager:
                         
                         try:
                             # Генерируем изображение (всегда как batch)
-                            result = self.generator.generate_image(task.prompt)
+                            result = self.generator.generate_image(
+                                task.prompt,
+                                negative_prompt=task.negative_prompt
+                            )
 
                             # Обновляем задачу с результатом
                             if result['success']:

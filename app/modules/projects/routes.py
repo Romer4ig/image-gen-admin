@@ -14,12 +14,17 @@ def create_project():
     if request.method == 'POST':
         title = request.form.get('title')
         basic_prompt = request.form.get('basic_prompt', '')
+        negative_prompt = request.form.get('negative_prompt', '')
         
         if not title:
             flash('Название проекта обязательно', 'danger')
         else:
             # Создаем новый проект
-            project = Project(title=title, basic_prompt=basic_prompt)
+            project = Project(
+                title=title, 
+                basic_prompt=basic_prompt,
+                negative_prompt=negative_prompt
+            )
             db.session.add(project)
             db.session.commit()
             
@@ -36,6 +41,7 @@ def edit_project(project_id):
     if request.method == 'POST':
         title = request.form.get('title')
         basic_prompt = request.form.get('basic_prompt', '')
+        negative_prompt = request.form.get('negative_prompt', '')
         
         if not title:
             flash('Название проекта обязательно', 'danger')
@@ -43,6 +49,7 @@ def edit_project(project_id):
             # Обновляем проект
             project.title = title
             project.basic_prompt = basic_prompt
+            project.negative_prompt = negative_prompt
             db.session.commit()
             
             flash(f'Проект "{title}" успешно обновлен', 'success')

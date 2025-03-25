@@ -82,7 +82,7 @@ def update_prompt():
     """Обновление промпта коллекции"""
     data = request.json
     
-    if not data or 'collection_id' not in data or 'prompt' not in data:
+    if not data or 'collection_id' not in data:
         return jsonify({'success': False, 'error': 'Неполные данные'}), 400
     
     try:
@@ -92,7 +92,14 @@ def update_prompt():
         if not collection:
             return jsonify({'success': False, 'error': f'Коллекция с ID {collection_id} не найдена'}), 404
         
-        collection.prompt = data['prompt']
+        # Обновляем обычный промпт, если он предоставлен
+        if 'prompt' in data:
+            collection.prompt = data['prompt']
+            
+        # Обновляем негативный промпт, если он предоставлен
+        if 'negative_prompt' in data:
+            collection.negative_prompt = data['negative_prompt']
+            
         db.session.commit()
         
         return jsonify({'success': True})
@@ -100,3 +107,38 @@ def update_prompt():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@collections_bp.route('/create', methods=['POST'])
+def create_collection():
+    """Создание новой коллекции"""
+    try:
+        collection_id = request.form.get('id')
+        title = request.form.get('title')
+        collection_type = request.form.get('type')
+        
+        if not collection_id or not title or not collection_type:
+            flash('ID, название и тип коллекции обязательны для заполнения', 'error')
+            return redirect(url_for('collections.list_collections'))
+            
+        # Проверяем, не существует ли уже коллекция с таким ID
+        existing_collection = Collection.query.get(collection_id)
+        if existing_collection:
+            flash(f'Коллекция с ID {collection_id} уже существует', 'error')
+            return redirect(url_for('collections.list_collections'))
+        
+        collection = Collection(
+            id=collection_id,
+            title=title,
+            type=collection_type
+        )
+        
+        db.session.add(collection)
+        db.session.commit()
+        
+        flash('Коллекция успешно создана', 'success')
+        return redirect(url_for('collections.list_collections'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при создании коллекции: {str(e)}', 'error')
+        return redirect(url_for('collections.list_collections'))

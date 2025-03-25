@@ -1,6 +1,6 @@
 from flask import render_template, request, url_for, redirect, flash, jsonify, abort
 from app.modules.tasks import tasks_bp
-from app.models import GenerationTask, Collection, Project, db, Settings
+from app.models import GenerationTask, Collection, Project, db, Settings, Favorite
 from app.services.task_manager import task_manager
 from app.modules.tasks.services import filter_tasks, get_task_details, batch_generate_tasks
 
@@ -53,7 +53,98 @@ def view_task(task_id):
     task = GenerationTask.query.get_or_404(task_id)
     details = get_task_details(task)
     
-    return render_template('tasks/view.html', task=task, details=details)
+    # Получаем выбранное изображение для этой задачи (если есть)
+    selected_image = Favorite.query.filter_by(task_id=task_id).first()
+    
+    return render_template('tasks/view.html', task=task, details=details, selected_image=selected_image)
+
+@tasks_bp.route('/select-image/<int:task_id>', methods=['POST'])
+def select_image(task_id):
+    """Выбор финального изображения для задачи"""
+    task = GenerationTask.query.get_or_404(task_id)
+    image_path = request.json.get('image_path')
+    
+    if not image_path:
+        return jsonify({'success': False, 'error': 'Не указан путь к изображению'}), 400
+    
+    # Удаляем предыдущие выборы для этой задачи
+    Favorite.query.filter_by(task_id=task_id).delete()
+    
+    # Создаем новую запись о выборе
+    favorite = Favorite(task_id=task_id, image_path=image_path)
+    db.session.add(favorite)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@tasks_bp.route('/unselect-image/<int:task_id>', methods=['POST'])
+def unselect_image(task_id):
+    """Отмена выбора изображения для задачи"""
+    Favorite.query.filter_by(task_id=task_id).delete()
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@tasks_bp.route('/final-images')
+def view_final_images():
+    """Просмотр всех финальных изображений с фильтрацией"""
+    collection_id = request.args.get('collection_id')
+    project_id = request.args.get('project_id')
+    
+    # Базовый запрос для получения выбранных изображений
+    query = db.session.query(
+        Favorite,
+        GenerationTask,
+        Collection,
+        Project
+    ).join(
+        GenerationTask,
+        GenerationTask.id == Favorite.task_id
+    ).join(
+        Collection,
+        Collection.id == GenerationTask.collection_id
+    ).join(
+        Project,
+        Project.id == GenerationTask.project_id
+    )
+    
+    # Применяем фильтры
+    if collection_id:
+        query = query.filter(GenerationTask.collection_id == collection_id)
+    
+    if project_id:
+        query = query.filter(GenerationTask.project_id == project_id)
+    
+    # Получаем данные
+    favorites = query.order_by(GenerationTask.collection_id, GenerationTask.project_id).all()
+    
+    # Группируем по коллекциям и проектам
+    grouped_data = {}
+    for fav, task, collection, project in favorites:
+        if collection.id not in grouped_data:
+            grouped_data[collection.id] = {
+                'collection': collection,
+                'projects': {}
+            }
+        
+        if project.id not in grouped_data[collection.id]['projects']:
+            grouped_data[collection.id]['projects'][project.id] = {
+                'project': project,
+                'image': fav.image_path
+            }
+    
+    # Получаем все коллекции и проекты для фильтров
+    collections = Collection.query.all()
+    projects = Project.query.all()
+    
+    return render_template(
+        'tasks/final_images.html',
+        grouped_data=grouped_data,
+        collections=collections,
+        projects=projects,
+        current_collection_id=collection_id,
+        current_project_id=project_id
+    )
 
 @tasks_bp.route('/generate/<int:collection_id>/<int:project_id>', methods=['POST'])
 def generate_task(collection_id, project_id):

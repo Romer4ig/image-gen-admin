@@ -16,8 +16,9 @@
         <thead class="table-primary">
             <tr>
                 <th scope="col" style="width: 5%">ID</th>
-                <th scope="col" style="width: 25%">Название</th>
-                <th scope="col" style="width: 55%">Базовый промпт</th>
+                <th scope="col" style="width: 20%">Название</th>
+                <th scope="col" style="width: 30%">Базовый промпт</th>
+                <th scope="col" style="width: 30%">Негативный промпт</th>
                 <th scope="col" style="width: 15%">Действия</th>
             </tr>
         </thead>
@@ -28,8 +29,17 @@
                 <td>{{ project.title }}</td>
                 <td>
                     {% if project.basic_prompt %}
-                    <div class="text-truncate" style="max-width: 400px;" title="{{ project.basic_prompt }}">
+                    <div class="text-truncate" style="max-width: 300px;" title="{{ project.basic_prompt }}">
                         {{ project.basic_prompt }}
+                    </div>
+                    {% else %}
+                    <span class="text-muted fst-italic">Не указан</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if project.negative_prompt %}
+                    <div class="text-truncate" style="max-width: 300px;" title="{{ project.negative_prompt }}">
+                        {{ project.negative_prompt }}
                     </div>
                     {% else %}
                     <span class="text-muted fst-italic">Не указан</span>

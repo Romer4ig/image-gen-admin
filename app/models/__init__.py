@@ -8,3 +8,4 @@ from app.models.collection import Collection
 from app.models.project import Project
 from app.models.generation_task import GenerationTask
 from app.models.settings import Settings
+from app.models.favorite import Favorite
