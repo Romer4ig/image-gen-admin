@@ -13,25 +13,27 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">Генератор изображений</a>
+            <a class="navbar-brand" href="{{ url_for('collections.list_collections') }}">Генератор изображений</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">Главная</a>
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('collections.') %}active{% endif %}" href="{{ url_for('collections.list_collections') }}">Коллекции</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.collections' %}active{% endif %}" href="{{ url_for('main.collections') }}">Коллекции</a>
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('projects.') %}active{% endif %}" href="{{ url_for('projects.list_projects') }}">Проекты</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.projects' %}active{% endif %}" href="{{ url_for('main.projects') }}">Проекты</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.tasks' %}active{% endif %}" href="{{ url_for('main.tasks') }}">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('tasks.') %}active{% endif %}" href="{{ url_for('tasks.list_tasks') }}">
                             Задачи 
                             <span class="badge bg-primary" id="pendingTasksCount"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('settings.') %}active{% endif %}" href="{{ url_for('settings.manage_settings') }}">
+                            <i class="bi bi-gear"></i> Настройки
                         </a>
                     </li>
                 </ul>
@@ -59,33 +61,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    
-    <!-- Обновление счетчика задач -->
-    <script>
-    // Функция для обновления счетчика ожидающих задач
-    function updatePendingTasksCount() {
-        fetch('{{ url_for("api.pending_tasks_count") }}')
-            .then(response => response.json())
-            .then(data => {
-                const countElement = document.getElementById('pendingTasksCount');
-                if (countElement) {
-                    if (data.count > 0) {
-                        countElement.textContent = data.count;
-                        countElement.style.display = 'inline-block';
-                    } else {
-                        countElement.style.display = 'none';
-                    }
-                }
-            })
-            .catch(error => console.error('Error updating pending tasks count:', error));
-    }
-    
-    // Обновление счетчика при загрузке страницы и каждые 10 секунд
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePendingTasksCount();
-        setInterval(updatePendingTasksCount, 10000);
-    });
-    </script>
     
     {% block scripts %}{% endblock %}
 </body>

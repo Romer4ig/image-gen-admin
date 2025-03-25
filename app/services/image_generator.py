@@ -2,63 +2,145 @@ import requests
 import base64
 import os
 from pathlib import Path
+from datetime import datetime
+from app.models import Settings
+
 
 class ImageGenerator:
     """Сервис для генерации изображений через Stable Diffusion API"""
     
-    def __init__(self, api_url=None):
-        """Инициализация сервиса с указанным URL API"""
-        self.api_url = api_url or os.environ.get('SD_API_URL', 'http://127.0.0.1:7860')
+    def __init__(self):
+        """Инициализация сервиса генерации изображений"""
+        pass
     
-    def generate_image(self, prompt, output_path=None, **kwargs):
+    def get_api_url(self):
+        """Получает URL API из настроек"""
+        return Settings.get_setting('api_url')
+    
+    def get_samplers(self):
+        """
+        Получает список доступных семплеров из API Stable Diffusion
+        
+        Returns:
+            list: Список доступных семплеров или пустой список в случае ошибки
+        """
+        try:
+            api_url = self.get_api_url()
+            response = requests.get(url=f'{api_url}/sdapi/v1/samplers')
+            response.raise_for_status()
+            
+            samplers = response.json()
+            return samplers
+        except Exception as e:
+            print(f"Ошибка при получении списка семплеров: {e}")
+            return []
+    
+    def get_schedulers(self):
+        """
+        Получает список доступных планировщиков из API Stable Diffusion
+        
+        Returns:
+            list: Список доступных планировщиков или пустой список в случае ошибки
+        """
+        try:
+            api_url = self.get_api_url()
+            response = requests.get(url=f'{api_url}/sdapi/v1/schedulers')
+            response.raise_for_status()
+            
+            schedulers = response.json()
+            return schedulers
+        except Exception as e:
+            print(f"Ошибка при получении списка планировщиков: {e}")
+            return []
+    
+    def get_sd_models(self):
+        """
+        Получает список доступных моделей Stable Diffusion из API
+        
+        Returns:
+            list: Список доступных моделей или пустой список в случае ошибки
+        """
+        try:
+            api_url = self.get_api_url()
+            response = requests.get(url=f'{api_url}/sdapi/v1/sd-models')
+            response.raise_for_status()
+            
+            models = response.json()
+            return models
+        except Exception as e:
+            print(f"Ошибка при получении списка моделей SD: {e}")
+            return []
+    
+    def generate_image(self, prompt):
         """
         Генерирует изображение на основе промпта
         
         Args:
             prompt (str): Текст промпта для генерации
-            output_path (str, optional): Путь для сохранения изображения
-            **kwargs: Дополнительные параметры для API
+            batch_size (int, optional): Количество изображений для генерации. Если не указано, берется из настроек.
             
         Returns:
-            dict: Результат запроса и путь к сохраненному изображению
+            dict: Результат запроса и пути к сохраненным изображениям
         """
+        # Получаем настройки
+        steps = Settings.get_setting('default_num_inference_steps')
+        width = Settings.get_setting('default_width')
+        height = Settings.get_setting('default_height')
+        guidance_scale = Settings.get_setting('default_guidance_scale')
+        sampler_name = Settings.get_setting('default_sampler_name')
+        scheduler = Settings.get_setting('default_scheduler')
+        sd_model = Settings.get_setting('default_sd_model')
+
+        batch_size = Settings.get_setting('default_batch_size')
+        
         # Базовые параметры
         payload = {
             "prompt": prompt,
-            "steps": kwargs.get("steps", 22),
-            "width": kwargs.get("width", 640),
-            "height": kwargs.get("height", 640),
-            "sampler_name": kwargs.get("sampler_name", "Euler a"),
-            "scheduler": kwargs.get("scheduler", "Simple"),
-            "cfg_scale": kwargs.get("cfg_scale", 7),
+            "steps": steps,
+            "width": width,
+            "height": height,
+            "cfg_scale": guidance_scale,
+            "batch_size": batch_size,
+            "sampler_name": sampler_name,
+            "scheduler": scheduler,
         }
         
-        # Добавляем остальные переданные параметры
-        for key, value in kwargs.items():
-            if key not in payload:
-                payload[key] = value
-        
+        # Добавляем модель, если она задана
+        if sd_model:
+            payload["override_settings"] = {
+                "sd_model_checkpoint": sd_model
+            }
+
         try:
+            # Получаем URL API
+            api_url = self.get_api_url()
+            
             # Отправляем запрос на API
-            response = requests.post(url=f'{self.api_url}/sdapi/v1/txt2img', json=payload)
+            response = requests.post(url=f'{api_url}/sdapi/v1/txt2img', json=payload)
             response.raise_for_status()  # Проверяем на ошибки
             result = response.json()
             
-            # Если не указан путь для сохранения, создаем его на основе метки времени
-            if not output_path:
-                from datetime import datetime
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_dir = Path('app/static/generated')
-                output_dir.mkdir(exist_ok=True, parents=True)
-                output_path = output_dir / f"image_{timestamp}.png"
+            # Создаем директорию для сохранения изображений
+            output_dir = Path('app/static/generated')
+            output_dir.mkdir(exist_ok=True, parents=True)
             
-            # Сохраняем изображение
-            with open(output_path, 'wb') as f:
-                f.write(base64.b64decode(result['images'][0]))
+            # Сохраняем все изображения
+            image_paths = []
+            for i, image_base64 in enumerate(result['images']):
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                current_path = output_dir / f"image_{timestamp}_{i}.png"
+                
+                # Сохраняем изображение
+                with open(current_path, 'wb') as f:
+                    f.write(base64.b64decode(image_base64))
+                
+                image_paths.append(str(current_path))
             
             return {
                 "success": True,
-                "path": str(output_path),
+                "path": image_paths[0] if len(image_paths) == 1 else None,  # Для обратной совместимости
+                "paths": image_paths,
+                "count": len(image_paths),
                 "response": result
             }
             
@@ -66,4 +148,4 @@ class ImageGenerator:
             return {
                 "success": False,
                 "error": str(e)
-            } 
+            }

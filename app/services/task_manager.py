@@ -1,9 +1,10 @@
-from app.models import db, GenerationTask, Collection, Project
+from app.models import db, GenerationTask, Collection, Project, Settings
 from app.services.image_generator import ImageGenerator
 from datetime import datetime
 import threading
 import time
 import logging
+from contextlib import nullcontext
 
 logger = logging.getLogger(__name__)
 
@@ -15,21 +16,10 @@ class TaskManager:
         self.worker_thread = None
         self.stop_worker = False
         self.generator = ImageGenerator()
-        
-        if app:
-            self.init_app(app)
     
-    def init_app(self, app):
-        """Инициализация с Flask-приложением"""
-        self.app = app
-        # Обновляем URL API из конфигурации
-        api_url = app.config.get('SD_API_URL')
-        if api_url:
-            self.generator = ImageGenerator(api_url=api_url)
-    
-    def create_task(self, collection_id, project_id):
+    def create_generation_task(self, collection_id, project_id):
         """
-        Создает новую задачу для генерации изображения
+        Создает новую задачу для генерации изображений
         
         Args:
             collection_id: ID коллекции
@@ -94,7 +84,14 @@ class TaskManager:
     
     def _worker_loop(self):
         """Основной цикл обработки задач"""
-        with self.app.app_context():
+        # Проверяем наличие контекста приложения
+        if self.app:
+            context_manager = self.app.app_context()
+        else:
+            # Используем пустой контекст, если приложение не определено
+            context_manager = nullcontext()
+            
+        with context_manager:
             while not self.stop_worker:
                 try:
                     # Получаем следующую задачу со статусом 'pending'
@@ -107,18 +104,20 @@ class TaskManager:
                         db.session.commit()
                         
                         try:
-                            # Генерируем изображение
-                            result = self.generator.generate_image(task.prompt, 
-                                                                steps=task.steps,
-                                                                width=task.width,
-                                                                height=task.height,
-                                                                sampler_name=task.sampler_name,
-                                                                cfg_scale=task.cfg_scale)
-                            
+                            # Генерируем изображение (всегда как batch)
+                            result = self.generator.generate_image(task.prompt)
+
                             # Обновляем задачу с результатом
                             if result['success']:
                                 task.status = 'completed'
+                                
+                                # Сохраняем основной путь к изображению (для обратной совместимости)
                                 task.result_path = result['path']
+                                
+                                # Сохраняем все пути через разделитель для поддержки нескольких изображений
+                                if result.get('paths'):
+                                    task.result_paths = ';'.join(result['paths'])
+                                    task.batch_count = result['count']
                             else:
                                 task.status = 'failed'
                                 task.error = result.get('error', 'Неизвестная ошибка')
@@ -142,4 +141,12 @@ class TaskManager:
         logger.info("Worker thread stopped")
 
 # Создаем глобальный экземпляр менеджера задач
-task_manager = TaskManager() 
+task_manager = TaskManager()
+
+def init_app(app):
+    """Инициализирует менеджер задач с приложением Flask"""
+    global task_manager
+    task_manager.app = app
+    
+    # Запускаем воркер при необходимости
+    task_manager.ensure_worker_running()

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Задача #{{ task.id }}</h1>
-    <a href="{{ url_for('main.tasks') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Назад к списку
     </a>
 </div>
@@ -49,25 +49,32 @@
                             <span>{{ task.completed_at.strftime('%d.%m.%Y %H:%M:%S') }}</span>
                         </li>
                         {% endif %}
+                        
+                        {% if details.duration %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center text-success">
+                            Длительность выполнения
+                            <span>{{ details.duration.formatted }}</span>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
                 
                 <div class="mb-3">
                     <h6>Связанные данные:</h6>
                     <ul class="list-group">
-                        {% if task.collection %}
+                        {% if details.collection %}
                         <li class="list-group-item">
                             <strong>Коллекция:</strong> 
-                            <a href="{{ url_for('main.collections', type=task.collection.type) }}">
-                                {{ task.collection.title }}
+                            <a href="{{ url_for('collections.list_collections', type=details.collection.type) }}">
+                                {{ details.collection.title }}
                             </a>
                         </li>
                         {% endif %}
-                        {% if task.project %}
+                        {% if details.project %}
                         <li class="list-group-item">
                             <strong>Проект:</strong> 
-                            <a href="{{ url_for('main.projects') }}">
-                                {{ task.project.title }}
+                            <a href="{{ url_for('projects.list_projects') }}">
+                                {{ details.project.title }}
                             </a>
                         </li>
                         {% endif %}
@@ -120,17 +127,35 @@
             </div>
         </div>
         
-        {% if task.status == 'completed' and task.result_path %}
+        {% if task.status == 'completed' and task.result_urls %}
         <div class="card mb-4">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0">Результат</h5>
+                <h5 class="mb-0">{% if task.batch_count > 1 %}Результаты ({{ task.batch_count }} изображений){% else %}Результат{% endif %}</h5>
             </div>
-            <div class="card-body text-center">
-                <img src="{{ task.result_url }}" alt="Generated image" class="img-fluid mb-3 rounded">
-                <div>
-                    <a href="{{ task.result_url }}" target="_blank" class="btn btn-outline-primary">
-                        <i class="bi bi-arrows-fullscreen"></i> Открыть в полном размере
-                    </a>
+            <div class="card-body">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for url in task.result_urls %}
+                    <div class="col">
+                        <div class="card">
+                            <div class="position-relative">
+                                <img src="{{ url }}" class="card-img-top" 
+                                    style="object-fit: cover; height: 100%; width: 100%;" alt="Результат генерации">
+                                <div class="img-overlay">
+                                    <div class="overlay-content">
+                                        <div class="btn-group">
+                                            <a href="{{ url }}" target="_blank" class="btn btn-sm btn-light">
+                                                <i class="bi bi-eye"></i> Просмотр
+                                            </a>
+                                            <a href="{{ url }}" download class="btn btn-sm btn-light">
+                                                <i class="bi bi-download"></i> Скачать
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
                 </div>
             </div>
         </div>

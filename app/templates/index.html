@@ -1,51 +1,59 @@
 {% extends "base.html" %}
 
-{% block title %}Генератор изображений{% endblock %}
+{% block title %}Главная{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="jumbotron bg-light p-5 rounded">
-            <h1 class="display-4">Генератор изображений</h1>
-            <p class="lead">Добро пожаловать в систему управления генерацией изображений</p>
-            <hr class="my-4">
-            <p>Используйте наш сервис для создания красивых изображений на основе текстовых описаний</p>
-            <a class="btn btn-primary btn-lg" href="{{ url_for('main.collections') }}" role="button">Просмотреть коллекции</a>
-        </div>
+<div class="jumbotron mt-4 p-5 bg-light rounded-3">
+    <h1 class="display-4">Генерация изображений</h1>
+    <p class="lead">Панель администратора для управления генерацией изображений с помощью Stable Diffusion.</p>
+    <hr class="my-4">
+    <p>Выберите раздел для работы:</p>
+    <div class="d-flex flex-wrap gap-3">
+        <a href="{{ url_for('collections.list_collections') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-collection"></i> Коллекции
+        </a>
+        <a href="{{ url_for('projects.list_projects') }}" class="btn btn-success btn-lg">
+            <i class="bi bi-folder"></i> Проекты
+        </a>
+        <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-info btn-lg">
+            <i class="bi bi-list-check"></i> Задачи
+        </a>
     </div>
 </div>
 
 <div class="row mt-5">
     <div class="col-md-4">
-        <div class="card text-center">
+        <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Коллекции</h5>
+                <h5 class="mb-0">Коллекции</h5>
             </div>
             <div class="card-body">
-                <p class="card-text">Просмотр и управление коллекциями для генерации изображений</p>
-                <a href="{{ url_for('main.collections') }}" class="btn btn-primary">Посмотреть</a>
+                <p>Управление коллекциями для генерации изображений. Здесь вы можете просматривать и фильтровать коллекции.</p>
+                <a href="{{ url_for('collections.list_collections') }}" class="btn btn-outline-primary">Перейти к коллекциям</a>
             </div>
         </div>
     </div>
+    
     <div class="col-md-4">
-        <div class="card text-center">
+        <div class="card">
             <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">Генерация</h5>
+                <h5 class="mb-0">Проекты</h5>
             </div>
             <div class="card-body">
-                <p class="card-text">Создание новых изображений по описанию</p>
-                <a href="#" class="btn btn-success">Создать</a>
+                <p>Создание и управление проектами. Проекты содержат базовые промпты и настройки для генерации изображений.</p>
+                <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-success">Перейти к проектам</a>
             </div>
         </div>
     </div>
+    
     <div class="col-md-4">
-        <div class="card text-center">
+        <div class="card">
             <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">Настройки</h5>
+                <h5 class="mb-0">Задачи</h5>
             </div>
             <div class="card-body">
-                <p class="card-text">Управление настройками и параметрами генерации</p>
-                <a href="#" class="btn btn-info">Настроить</a>
+                <p>Управление и мониторинг задач генерации изображений. Здесь вы можете отслеживать прогресс и результаты.</p>
+                <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-outline-info">Перейти к задачам</a>
             </div>
         </div>
     </div>

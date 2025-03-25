@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Настройки приложения</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('settings.manage_settings') }}">
+                        <div class="mb-4">
+                            <h4>Основные настройки</h4>
+                            <div class="mb-3">
+                                <label for="api_url" class="form-label">URL API для генерации изображений</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="api_url" name="api_url" value="{{ settings.api_url }}" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="check_connection">
+                                        <i class="bi bi-arrow-repeat"></i> Проверить соединение
+                                    </button>
+                                </div>
+                                <div class="form-text">Адрес API Stable Diffusion (например, http://localhost:7860)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4>Настройки пакетной генерации</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_batch_size" class="form-label">Размер пакета по умолчанию</label>
+                                        <input type="number" class="form-control" id="default_batch_size" name="default_batch_size" 
+                                            value="{{ settings.default_batch_size }}" min="1" max="100" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="max_batch_size" class="form-label">Максимальный размер пакета</label>
+                                        <input type="number" class="form-control" id="max_batch_size" name="max_batch_size" 
+                                            value="{{ settings.max_batch_size }}" min="1" max="100" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4>Параметры генерации изображений</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_width" class="form-label">Ширина по умолчанию</label>
+                                        <input type="number" class="form-control" id="default_width" name="default_width" 
+                                            value="{{ settings.default_width }}" min="256" max="1024" step="8" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_height" class="form-label">Высота по умолчанию</label>
+                                        <input type="number" class="form-control" id="default_height" name="default_height" 
+                                            value="{{ settings.default_height }}" min="256" max="1024" step="8" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_guidance_scale" class="form-label">Guidance Scale по умолчанию</label>
+                                        <input type="number" class="form-control" id="default_guidance_scale" name="default_guidance_scale" 
+                                            value="{{ settings.default_guidance_scale }}" min="1" max="20" step="0.1" required>
+                                        <div class="form-text">Чем выше значение, тем больше изображение следует промпту</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_num_inference_steps" class="form-label">Количество шагов генерации</label>
+                                        <input type="number" class="form-control" id="default_num_inference_steps" name="default_num_inference_steps" 
+                                            value="{{ settings.default_num_inference_steps }}" min="1" max="100" required>
+                                        <div class="form-text">Больше шагов = лучшее качество, но дольше генерация</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4>Параметры сэмплера и планировщика</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_sampler_name" class="form-label">Сэмплер по умолчанию</label>
+                                        <select class="form-select" id="default_sampler_name" name="default_sampler_name" required>                                            
+                                            {% for sampler in samplers %}
+                                            <option value="{{ sampler.name }}" {% if settings.default_sampler_name == sampler.name %}selected{% endif %}>
+                                                {{ sampler.name }}
+                                            </option>
+                                            {% endfor %}                                            
+                                        </select>
+                                        <div class="form-text">Алгоритм генерации изображения</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="default_scheduler" class="form-label">Планировщик по умолчанию</label>
+                                        <select class="form-select" id="default_scheduler" name="default_scheduler" required>                                            
+                                            {% for scheduler in schedulers %}
+                                            <option value="{{ scheduler.name }}" {% if settings.default_scheduler == scheduler.name %}selected{% endif %}>
+                                                {{ scheduler.name }}
+                                            </option>
+                                            {% endfor %}                                            
+                                        </select>
+                                        <div class="form-text">Стратегия определения шагов при генерации</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="mb-3">
+                                    <label for="default_sd_model" class="form-label">Модель Stable Diffusion по умолчанию</label>
+                                    <select class="form-select" id="default_sd_model" name="default_sd_model">
+                                        <option value="" {% if not settings.default_sd_model %}selected{% endif %}>Использовать текущую модель</option>
+                                        {% if sd_models %}
+                                            {% for model in sd_models %}
+                                            <option value="{{ model.title }}" {% if settings.default_sd_model == model.title %}selected{% endif %}>
+                                                {{ model.title }}
+                                            </option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                    <div class="form-text">Модель Stable Diffusion, которая будет использоваться для генерации</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %} 

@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Коллекции{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-5 fw-bold text-primary"><i class="bi bi-collection"></i> Коллекции</h1>
+</div>
+
+{% if collections or total_count > 0 %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <form method="get" action="{{ url_for('collections.list_collections') }}" class="d-flex align-items-center">
+                    <div class="input-group" style="max-width: 200px;">
+                        <span class="input-group-text bg-light border-0">Тип:</span>
+                        <select name="type" class="form-select border-0" onchange="this.form.submit()">
+                            <option value="">Все типы</option>
+                            {% for type in types %}
+                            <option value="{{ type }}" {% if current_type == type %}selected{% endif %}>{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    {% if current_type %}
+                    <a href="{{ url_for('collections.list_collections') }}" class="btn btn-outline-primary btn-sm ms-2" title="Сбросить фильтр" style="white-space: nowrap;">
+                        Сбросить фильтр
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+            <div class="col text-end">
+                <span class="badge bg-info rounded-pill">
+                    Показано: {{ collections|length }} из {{ total_count }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4 bg-light border-0 shadow-sm">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap align-items-center">
+            <span class="text-muted me-3"><i class="bi bi-info-circle"></i> Статусы:</span>
+            <span class="badge bg-dark rounded-pill me-2 px-3 py-2"><i class="bi bi-dash-circle"></i> Нет генераций</span>
+            <span class="badge bg-warning rounded-pill me-2 px-3 py-2"><i class="bi bi-arrow-repeat"></i> В процессе</span>
+            <span class="badge bg-success rounded-pill me-2 px-3 py-2"><i class="bi bi-check-circle"></i> Сгенерировано</span>
+            <span class="badge bg-danger rounded-pill me-2 px-3 py-2"><i class="bi bi-exclamation-triangle"></i> Ошибка</span>
+        </div>
+    </div>
+</div>
+
+<!-- Форма массовой генерации -->
+<form action="{{ url_for('tasks.batch_generate') }}" method="post" id="bulkGenerateForm">
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="selectAllCollections">
+                        <label class="form-check-label fw-bold" for="selectAllCollections">
+                            Выбрать все коллекции
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <label for="bulkProjectSelect" class="visually-hidden">Выберите проект</label>
+                            <select class="form-select" name="project_id" id="bulkProjectSelect">
+                                <option value="" selected>-- Выберите проект --</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}">{{ project.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check me-2">
+                                    <input class="form-check-input" type="checkbox" id="bulkForceGeneration" name="force_generation" value="1">
+                                    <label class="form-check-label" for="bulkForceGeneration">
+                                        Принудительно
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="bulkGenerateBtn">
+                                    <i class="bi bi-magic me-1"></i> Сгенерировать
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm rounded" id="collectionsTable">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th scope="col" style="width: 5%" class="rounded-start">
+                        <i class="bi bi-check-square"></i>
+                    </th>
+                    <th scope="col" style="width: 5%">ID</th>
+                    <th scope="col" style="width: 25%">Название</th>
+                    <th scope="col" style="width: 10%">Тип</th>
+                    <th scope="col" style="width: 15%">Проекты</th>
+                    <th scope="col" style="width: 35%">Промпт</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for collection in collections %}
+                <tr class="align-middle">
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input collection-checkbox" type="checkbox" name="collection_ids" value="{{ collection.id }}" id="collection{{ collection.id }}">
+                            <label class="form-check-label" for="collection{{ collection.id }}"></label>
+                        </div>
+                    </td>
+                    <td class="fw-bold">{{ collection.id }}</td>
+                    <td class="fw-bold">
+                        <a href="{{ url_for('collections.view_collection', collection_id=collection.id) }}" class="text-decoration-none text-dark" target="_blank">
+                            {{ collection.title }}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('collections.list_collections', type=collection.type) }}" class="badge bg-secondary text-white rounded-pill text-decoration-none px-3">
+                            {{ collection.type }}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                        {% for project in collection_projects.get(collection.id, []) %}
+                        {% set key = collection.id ~ '-' ~ project.id %}
+                        {% set status = generation_status.get(key) %}
+                        <div class="project-badge-wrapper">
+                            {% if status == 'completed' %}
+                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection.id, project_id=project.id) }}" 
+                            class="badge bg-success project-badge text-decoration-none rounded-pill" 
+                            data-collection-id="{{ collection.id }}" data-project-id="{{ project.id }}" 
+                            data-bs-toggle="tooltip" title="Изображение сгенерировано! Нажмите, чтобы перейти к задачам.">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ project.title }}
+                            </a>
+                            {% elif status == 'pending' %}
+                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection.id, project_id=project.id) }}" 
+                            class="badge bg-warning project-badge text-decoration-none rounded-pill" 
+                            data-collection-id="{{ collection.id }}" data-project-id="{{ project.id }}" 
+                            data-bs-toggle="tooltip" title="Генерация в процессе... Нажмите, чтобы перейти к задачам.">
+                                <i class="bi bi-arrow-repeat me-1"></i>{{ project.title }}
+                            </a>
+                            {% elif status == 'failed' %}
+                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection.id, project_id=project.id) }}" 
+                            class="badge bg-danger project-badge text-decoration-none rounded-pill" 
+                            data-collection-id="{{ collection.id }}" data-project-id="{{ project.id }}" 
+                            data-bs-toggle="tooltip" title="Ошибка генерации! Нажмите, чтобы перейти к задачам.">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ project.title }}
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection.id, project_id=project.id) }}" 
+                            class="badge bg-dark project-badge text-decoration-none rounded-pill" 
+                            data-collection-id="{{ collection.id }}" data-project-id="{{ project.id }}" 
+                            data-bs-toggle="tooltip" title="Нет генераций. Нажмите, чтобы перейти к задачам.">
+                                <i class="bi bi-dash-circle me-1"></i>{{ project.title }}
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="prompt-container">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-2">
+                                    <div class="prompt-editor" data-collection-id="{{ collection.id }}">
+                                        <textarea class="form-control prompt-text" data-original-value="{{ collection.prompt }}" style="min-height: 80px; font-family: monospace; font-size: 0.9rem;">{{ collection.prompt }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</form>
+
+{% if collections|length == 0 and current_type %}
+<div class="alert alert-warning mb-3">
+    <i class="bi bi-exclamation-triangle me-2"></i> Нет коллекций с выбранным типом. <a href="{{ url_for('collections.list_collections') }}" class="alert-link">Показать все коллекции</a>
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i> Нет доступных коллекций.
+</div>
+{% endif %}
+
+{% endblock %}

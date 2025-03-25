@@ -19,8 +19,11 @@ class GenerationTask(db.Model):
     sampler_name = db.Column(db.String(50), default='Euler a')
     cfg_scale = db.Column(db.Float, default=7.0)
     
-    # Результат
-    result_path = db.Column(db.String(255), nullable=True)
+    # Параметры изображений
+    batch_size = db.Column(db.Integer, default=1)  # Планируемое количество изображений
+    batch_count = db.Column(db.Integer, nullable=True)  # Фактическое количество сгенерированных изображений
+    result_paths = db.Column(db.Text, nullable=True)  # Пути ко всем изображениям, разделенные точкой с запятой
+        
     error = db.Column(db.Text, nullable=True)
     
     # Связи с другими моделями
@@ -33,21 +36,24 @@ class GenerationTask(db.Model):
     
     def __repr__(self):
         return f'<GenerationTask {self.id}: {self.status}>'
-        
+
     @property
-    def result_url(self):
-        """Возвращает URL для доступа к сгенерированному изображению"""
-        if not self.result_path:
-            return None
-            
-        # Преобразуем полный путь в URL для статических файлов
-        if 'app/static/' in self.result_path:
-            return '/' + '/'.join(self.result_path.split('/', self.result_path.index('static'))[1:])
-        return None
+    def result_urls(self):
+        """Возвращает список URL для доступа ко всем сгенерированным изображениям"""
+        if not self.result_paths:
+            return []
+        
+        # Разбиваем строку путей и преобразуем в URL
+        urls = []
+        for path in self.result_paths.split(';'):
+            if 'app/static/' in path:
+                url = '/' + '/'.join(path.split('/', path.index('static'))[1:])
+                urls.append(url)
+        return urls
     
     def to_dict(self):
         """Преобразует задачу в словарь для API"""
-        return {
+        result = {
             'id': self.id,
             'prompt': self.prompt,
             'status': self.status,
@@ -56,5 +62,13 @@ class GenerationTask(db.Model):
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'collection_id': self.collection_id,
             'project_id': self.project_id,
-            'result_url': self.result_url
-        } 
+            'result_url': self.result_url,
+            'batch_size': self.batch_size
+        }
+        
+        # Добавляем информацию о пакетной генерации, если это пакетная задача
+        if self.batch_count:
+            result['batch_count'] = self.batch_count
+            result['result_urls'] = self.result_urls
+        
+        return result 

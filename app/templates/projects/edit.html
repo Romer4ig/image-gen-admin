@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Добавление проекта{% endblock %}
+{% block title %}Редактирование проекта{% endblock %}
 
 {% block content %}
 <div class="mb-4">
-    <h1>{% if project %}Редактирование{% else %}Добавление{% endif %} проекта</h1>
+    <h1>Редактирование проекта</h1>
 </div>
 
 <div class="row">
@@ -14,17 +14,17 @@
                 <form method="post">
                     <div class="mb-3">
                         <label for="title" class="form-label">Название проекта</label>
-                        <input type="text" class="form-control" id="title" name="title" value="{{ project.title if project else '' }}" required>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ project.title }}" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="basic_prompt" class="form-label">Базовый промпт</label>
-                        <textarea class="form-control" id="basic_prompt" name="basic_prompt" rows="5">{{ project.basic_prompt if project and project.basic_prompt else '' }}</textarea>
+                        <textarea class="form-control" id="basic_prompt" name="basic_prompt" rows="5">{{ project.basic_prompt if project.basic_prompt else '' }}</textarea>
                         <div class="form-text">Этот промпт будет использоваться как основа для всех коллекций в проекте.</div>
                     </div>
                     
                     <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('main.projects') }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Отмена
                         </a>
                         <button type="submit" class="btn btn-primary">
