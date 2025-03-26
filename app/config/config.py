@@ -7,6 +7,8 @@ class Config:
     """Базовая конфигурация"""
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-12345')
     DEBUG = False
+    # Настройки SQLAlchemy
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(Config):

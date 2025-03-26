@@ -112,4 +112,4 @@ def batch_generate():
         'success': True,
         'task_id': task.id,
         'batch_size': task.batch_size
-    }) 
+    })

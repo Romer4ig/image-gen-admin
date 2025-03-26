@@ -262,3 +262,53 @@ function initBulkGeneration() {
     
     
 }
+
+/**
+ * Показать всплывающее уведомление
+ * @param {string} message - текст уведомления
+ * @param {string} type - тип уведомления (success, danger, warning, info)
+ */
+function showToast(message, type = 'info') {
+    // Создаем контейнер для тостов, если его нет
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Создаем элемент toast
+    const toastId = 'toast-' + Date.now();
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+    toastEl.id = toastId;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+
+    // Создаем содержимое toast
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+
+    // Добавляем toast в контейнер
+    toastContainer.appendChild(toastEl);
+
+    // Инициализируем и показываем toast
+    const toast = new bootstrap.Toast(toastEl, {
+        autohide: true,
+        delay: 3000
+    });
+    toast.show();
+
+    // Удаляем toast после скрытия
+    toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
+    });
+}

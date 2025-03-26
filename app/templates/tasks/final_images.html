@@ -49,45 +49,25 @@
 
 {% if grouped_data %}
     {% for collection_id, data in grouped_data.items() %}
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">{{ data.collection.title }}</h3>
-        </div>
-        <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {% for project_id, project_data in data.projects.items() %}
-                <div class="col">
-                    <div class="card h-100 selected-final-image">
-                        <div class="card-header">
-                            <h5 class="mb-0">{{ project_data.project.title }}</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="position-relative">
-                                <img src="{{ project_data.image }}" class="card-img-top"
-                                    style="object-fit: cover; height: 200px; width: 100%;" alt="Финальное изображение">
-                                <div class="img-overlay">
-                                    <div class="overlay-content">
-                                        <div class="btn-group">
-                                            <a href="{{ project_data.image }}" target="_blank" class="btn btn-sm btn-light">
-                                                <i class="bi bi-eye"></i> Просмотр
-                                            </a>
-                                            <a href="{{ project_data.image }}" download class="btn btn-sm btn-light">
-                                                <i class="bi bi-download"></i> Скачать
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a href="{{ url_for('tasks.list_tasks', collection_id=collection_id, project_id=project_id) }}"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-list-check"></i> Все задачи
-                            </a>
+    <div class="collection-container mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Коллекция: {{ data.collection.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="images-track d-flex flex-nowrap overflow-auto pb-3">
+                    {% for project_id, project_data in data.projects.items() %}
+                    <div class="card me-3 flex-shrink-0" style="width: 300px;">
+                        <img src="{{ project_data.image }}"
+                             class="card-img-top gallery-image"
+                             alt="Изображение проекта {{ project_data.project.title }}"
+                             data-placeholder="{{ url_for('static', filename='img/placeholder.png') }}">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-0">{{ project_data.project.title }}</h6>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>

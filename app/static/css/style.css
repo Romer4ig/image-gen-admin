@@ -139,6 +139,84 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
+/* Стили для выделенного финального изображения */
+.selected-final-image {
+    position: relative; 
+    box-shadow: 0 10px 20px rgba(255, 193, 7, 0.4);
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    z-index: 10;
+    border: none !important;
+}
+
+.selected-final-image:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(255, 193, 7, 0.5);
+}
+
+.selected-final-image::before {
+    content: '★';
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    background-color: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #212529;
+    font-size: 18px;
+    z-index: 20;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.selected-final-image img {
+    border: 3px solid #ffc107;
+    border-radius: 4px;
+}
+
+.selected-final-image .card-header {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Стили для кнопки избранного */
+.favorite-btn {
+    transition: all 0.3s ease;
+}
+
+.favorite-btn i {
+    transition: all 0.3s ease;
+}
+
+.favorite-btn.btn-danger i {
+    transform: scale(1.2);
+    animation: heart-beat 0.6s ease-in-out;
+}
+
+@keyframes heart-beat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1.2); }
+}
+
 /* Медиа-запросы для адаптивности */
 @media (max-width: 768px) {
     .jumbotron {

@@ -1,7 +1,7 @@
 from flask import render_template, request, url_for, redirect, flash, jsonify
 from sqlalchemy import distinct
 from app.modules.collections import collections_bp
-from app.models import Collection, Project, GenerationTask, db
+from app.models import Collection, Project, GenerationTask, db, Favorite
 from app.modules.collections.services import get_collection_projects, get_generation_status
 
 @collections_bp.route('/')
@@ -62,13 +62,21 @@ def view_collection(collection_id):
         status='completed'
     ).order_by(GenerationTask.completed_at.desc()).all()
     
+    # Получаем все избранные изображения
+    favorites = {}
+    for task in completed_tasks:
+        task_favorites = Favorite.query.filter_by(task_id=task.id).all()
+        if task_favorites:
+            favorites[task.id] = [fav.image_path for fav in task_favorites]
+    
     # Сгруппируем задачи по проектам и выберем последнюю для каждого проекта
     for task in completed_tasks:
         project = Project.query.get(task.project_id)
         if project and project.id not in projects_data:
             projects_data[project.id] = {
                 'project': project,
-                'task': task
+                'task': task,
+                'favorites': favorites.get(task.id, [])
             }
     
     return render_template(

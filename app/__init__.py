@@ -11,9 +11,11 @@ def create_app(config_name="development"):
     from app.models import db
     db.init_app(app)
 
+    # Регистрация модулей
     from app.modules import register_modules
     register_modules(app)
 
+    # Регистрация API
     from app.api import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
     

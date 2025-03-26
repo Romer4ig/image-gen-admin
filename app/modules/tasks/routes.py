@@ -56,7 +56,16 @@ def view_task(task_id):
     # Получаем выбранное изображение для этой задачи (если есть)
     selected_image = Favorite.query.filter_by(task_id=task_id).first()
     
-    return render_template('tasks/view.html', task=task, details=details, selected_image=selected_image)
+    # Получаем все избранные изображения для этой задачи
+    favorite_images = [fav.image_path for fav in Favorite.query.filter_by(task_id=task_id).all()]
+    
+    return render_template(
+        'tasks/view.html', 
+        task=task, 
+        details=details, 
+        selected_image=selected_image,
+        favorite_images=favorite_images
+    )
 
 @tasks_bp.route('/select-image/<int:task_id>', methods=['POST'])
 def select_image(task_id):
