@@ -1,0 +1,113 @@
+.images-track {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    gap: 1rem;
+}
+
+.images-track .card {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.image-container {
+    position: relative;
+}
+
+.gallery-image {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+    cursor: pointer;
+}
+
+.favorite-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(220, 53, 69, 0.85);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    animation: pulse-favorite 1s ease-in-out;
+}
+
+.favorite-badge i {
+    font-size: 16px;
+}
+
+@keyframes pulse-favorite {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.image-container:hover .image-overlay {
+    opacity: 1;
+}
+
+.image-overlay .btn-group {
+    gap: 0.5rem;
+}
+
+.image-overlay .btn-outline-light {
+    color: white;
+    border-color: white;
+}
+
+.image-overlay .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.favorite-btn.active, 
+.favorite-btn.btn-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.favorite-btn.active i, 
+.favorite-btn.btn-danger i {
+    color: #dc3545;
+}
+
+.image-overlay .btn-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: #dc3545;
+}
+
+.image-overlay .btn-danger:hover {
+    background-color: rgba(220, 53, 69, 0.4);
+}
