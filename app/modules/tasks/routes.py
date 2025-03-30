@@ -224,3 +224,15 @@ def batch_generate():
         flash('Не создано ни одной новой задачи.', 'info')
     
     return redirect(url_for('tasks.list_tasks'))
+
+
+@tasks_bp.route('/pending-tasks-count', methods=['GET'])
+def pending_tasks_count():
+    """Возвращает количество задач в статусе 'pending' и 'processing'"""
+    count = GenerationTask.query.filter(
+        GenerationTask.status.in_(['pending', 'processing'])
+    ).count()
+
+    return jsonify({
+        'count': count
+    })

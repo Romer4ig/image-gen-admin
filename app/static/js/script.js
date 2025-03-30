@@ -175,7 +175,7 @@ function initCollectionTable() {
  * Обновление счетчика ожидающих задач
  */
 function updatePendingTasksCount() {
-    fetch('/api/pending-tasks-count')
+    fetch('/tasks/pending-tasks-count')
         .then(response => response.json())
         .then(data => {
             const countElement = document.getElementById('pendingTasksCount');
@@ -310,5 +310,30 @@ function showToast(message, type = 'info') {
     // Удаляем toast после скрытия
     toastEl.addEventListener('hidden.bs.toast', function() {
         toastEl.remove();
+    });
+}
+function syncSettings() {
+    const btn = document.querySelector('.sync-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Синхронизация...';
+
+    fetch('/settings/sync-settings', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Настройки успешно синхронизированы!');
+            location.reload();
+        } else {
+            alert('Ошибка синхронизации: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Ошибка сети: ' + error);
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Синхронизировать';
     });
 }

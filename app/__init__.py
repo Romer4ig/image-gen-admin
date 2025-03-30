@@ -15,9 +15,6 @@ def create_app(config_name="development"):
     from app.modules import register_modules
     register_modules(app)
 
-    # Регистрация API
-    from app.api import api_bp
-    app.register_blueprint(api_bp, url_prefix='/api')
     
     # Инициализация менеджера задач
     from app.services.task_manager import init_app as init_task_manager

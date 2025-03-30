@@ -84,4 +84,20 @@ def get_sd_models():
         models = image_generator.get_sd_models()
         return jsonify(models)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
+
+
+@settings_bp.route('/sync-settings', methods=['POST'])
+def sync_settings():
+    try:
+        generator = ImageGenerator()
+        generator.sync_settings_from_webui()
+        return jsonify({
+            "success": True,
+            "message": "Настройки успешно синхронизированы"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500

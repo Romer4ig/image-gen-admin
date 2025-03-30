@@ -11,7 +11,37 @@ class ImageGenerator:
     
     def __init__(self):
         """Инициализация сервиса генерации изображений"""
-        pass
+        self.last_sync_time = None
+
+    def sync_settings_from_webui(self):
+        """Синхронизирует настройки из WebUI"""
+        try:
+            api_url = self.get_api_url()
+            response = requests.get(url=f'{api_url}/sdapi/v1/options')
+            response.raise_for_status()
+            
+            webui_settings = response.json()
+            print(webui_settings)
+            self._map_webui_settings(webui_settings)
+            self.last_sync_time = datetime.now()
+            
+        except Exception as e:
+            print(f"Ошибка синхронизации настроек: {e}")
+
+    def _map_webui_settings(self, webui_settings):
+        """Маппинг параметров WebUI в настройки приложения"""
+        mapping = {
+            'sampler_name': 'default_sampler_name',
+            'steps': 'default_num_inference_steps',
+            'width': 'default_width',
+            'height': 'default_height',
+            'cfg_scale': 'default_guidance_scale',
+            'sd_model_checkpoint': 'default_sd_model'
+        }
+        
+        for webui_key, setting_key in mapping.items():
+            if webui_key in webui_settings:
+                Settings.set_setting(setting_key, webui_settings[webui_key])
     
     def get_api_url(self):
         """Получает URL API из настроек"""
